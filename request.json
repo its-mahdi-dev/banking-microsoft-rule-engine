@@ -1,0 +1,35 @@
+{
+  "transaction": {
+    "id": "T-1001",
+    "amount": 1200,
+    "currency": "USD",
+    "type": "International",
+    "countryFrom": "AZ",
+    "countryTo": "IR",
+    "mcc": "4829",
+    "utcTime": "2025-09-12T10:15:00Z",
+    "deviceId": "D-xyz",
+    "channel": "WEB",
+    "cardCountry": "AZ",
+    "ipCountry": "TR"
+  },
+  "account": {
+    "accountId": "A-2001",
+    "isVip": false,
+    "kycLevel": 1,
+    "isBlacklisted": false,
+    "suspended": false,
+    "chargebackCountLast90d": 1,
+    "residenceCountry": "AZ"
+  },
+  "facts": {
+    "dailyAmount": 500,
+    "dailyCount": 3,
+    "weeklyAmount": 2500,
+    "weeklyCount": 10,
+    "monthlyAmount": 20000,
+    "monthlyCount": 45,
+    "deviceVelocityLastHour": 60,
+    "realTimeRiskScore": 0.68
+  }
+}

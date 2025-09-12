@@ -1,0 +1,34 @@
+[
+  {
+    "WorkflowName": "TransactionRules",
+    "Rules": [
+      { "RuleName": "HardBlock_Suspended", "SuccessEvent": "BLOCK:AccountSuspended", "RuleExpressionType": "LambdaExpression", "Expression": "acct.Suspended == true" },
+      { "RuleName": "HardBlock_Blacklisted", "SuccessEvent": "BLOCK:AccountBlacklisted", "RuleExpressionType": "LambdaExpression", "Expression": "acct.IsBlacklisted == true" },
+
+      { "RuleName": "VIP_AutoApprove_Base", "SuccessEvent": "APPROVE:VipBase", "RuleExpressionType": "LambdaExpression", "Expression": "acct.IsVip == true" },
+      { "RuleName": "VIP_But_NoKyc_Intl_Block", "SuccessEvent": "BLOCK:VipButNoKycIntl", "RuleExpressionType": "LambdaExpression", "Expression": "acct.IsVip == true AND txn.Type == \"International\" AND acct.KycLevel < 1" },
+
+      { "RuleName": "Intl_NoKyc_OverLimit_Block", "SuccessEvent": "BLOCK:IntlNoKycOverLimit", "RuleExpressionType": "LambdaExpression", "Expression": "txn.Type == \"International\" AND acct.KycLevel < 2 AND RuleUtils.Over(txn.Amount, ctx.International.NoKycMax)" },
+      { "RuleName": "Intl_HighRiskDestination_Block", "SuccessEvent": "BLOCK:HighRiskDestination", "RuleExpressionType": "LambdaExpression", "Expression": "txn.Type == \"International\" AND ctx.International.HighRiskCountries.Contains(txn.CountryTo)" },
+      { "RuleName": "Intl_HighRiskOrigin_NonUSD_Block", "SuccessEvent": "BLOCK:HighRiskOriginNonUSD", "RuleExpressionType": "LambdaExpression", "Expression": "txn.Type == \"International\" AND ctx.International.HighRiskCountries.Contains(txn.CountryFrom) AND txn.Currency != \"USD\"" },
+
+      { "RuleName": "Limits_Daily_Review", "SuccessEvent": "REVIEW:DailyLimitExceeded", "RuleExpressionType": "LambdaExpression", "Expression": "ctx.LimitsByCurrency.ContainsKey(txn.Currency) AND (facts.DailyAmount + txn.Amount) > ctx.LimitsByCurrency[txn.Currency].DailyMax" },
+      { "RuleName": "Limits_Weekly_Review", "SuccessEvent": "REVIEW:WeeklyLimitExceeded", "RuleExpressionType": "LambdaExpression", "Expression": "ctx.LimitsByCurrency.ContainsKey(txn.Currency) AND (facts.WeeklyAmount + txn.Amount) > ctx.LimitsByCurrency[txn.Currency].WeeklyMax" },
+      { "RuleName": "Limits_Monthly_Block", "SuccessEvent": "BLOCK:MonthlyLimitExceeded", "RuleExpressionType": "LambdaExpression", "Expression": "ctx.LimitsByCurrency.ContainsKey(txn.Currency) AND (facts.MonthlyAmount + txn.Amount) > ctx.LimitsByCurrency[txn.Currency].MonthlyMax" },
+
+      { "RuleName": "Mcc_HighRisk_OverThreshold_Review", "SuccessEvent": "REVIEW:MccHighRiskOverThresh", "RuleExpressionType": "LambdaExpression", "Expression": "ctx.MccPolicies.ContainsKey(txn.Mcc) AND ctx.MccPolicies[txn.Mcc].IsHighRisk == true AND RuleUtils.Over(txn.Amount, ctx.MccPolicies[txn.Mcc].ReviewThreshold)" },
+
+      { "RuleName": "GeoMismatch_At_RedHour_Review", "SuccessEvent": "REVIEW:GeoMismatchAtRedHour", "RuleExpressionType": "LambdaExpression", "Expression": "RuleUtils.GeoMismatch(txn.IpCountry, txn.CardCountry) == true AND RuleUtils.IsRedHour(txn.UtcTime, ctx.RedHoursUtc) == true" },
+      { "RuleName": "DeviceVelocity_High_Review", "SuccessEvent": "REVIEW:DeviceVelocityHigh", "RuleExpressionType": "LambdaExpression", "Expression": "facts.DeviceVelocityLastHour > 50" },
+      { "RuleName": "IntlHighRisk_OnHoliday_Block", "SuccessEvent": "BLOCK:IntlHighRiskOnHoliday", "RuleExpressionType": "LambdaExpression", "Expression": "txn.Type == \"International\" AND ctx.International.HighRiskCountries.Contains(txn.CountryTo) AND RuleUtils.IsHoliday(txn.UtcTime, ctx.Holidays) == true" },
+
+      { "RuleName": "Chargebacks_Block", "SuccessEvent": "BLOCK:TooManyChargebacks", "RuleExpressionType": "LambdaExpression", "Expression": "acct.ChargebackCountLast90d >= 5" },
+      { "RuleName": "Chargebacks_Review", "SuccessEvent": "REVIEW:ChargebacksWarning", "RuleExpressionType": "LambdaExpression", "Expression": "acct.ChargebackCountLast90d >= 2 AND acct.ChargebackCountLast90d < 5" },
+
+      { "RuleName": "RiskScore_Block", "SuccessEvent": "BLOCK:VeryHighRiskScore", "RuleExpressionType": "LambdaExpression", "Expression": "facts.RealTimeRiskScore >= 0.9" },
+      { "RuleName": "RiskScore_Review", "SuccessEvent": "REVIEW:HighRiskScore", "RuleExpressionType": "LambdaExpression", "Expression": "facts.RealTimeRiskScore >= 0.7 AND facts.RealTimeRiskScore < 0.9" },
+
+      { "RuleName": "Approve_Default", "SuccessEvent": "APPROVE:Default", "RuleExpressionType": "LambdaExpression", "Expression": "true" }
+    ]
+  }
+]
