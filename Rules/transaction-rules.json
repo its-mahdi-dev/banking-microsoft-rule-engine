@@ -27,7 +27,12 @@
 
       { "RuleName": "RiskScore_Block", "SuccessEvent": "BLOCK:VeryHighRiskScore", "RuleExpressionType": "LambdaExpression", "Expression": "facts.RealTimeRiskScore >= 0.9" },
       { "RuleName": "RiskScore_Review", "SuccessEvent": "REVIEW:HighRiskScore", "RuleExpressionType": "LambdaExpression", "Expression": "facts.RealTimeRiskScore >= 0.7 AND facts.RealTimeRiskScore < 0.9" },
-
+      {
+        "RuleName": "DeviceTrust_Method_Check",
+        "SuccessEvent": "REVIEW:DeviceTrustFailed",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "RuleUtils.EvaluateDeviceTrust( (RuleUtils.GeoMismatch(txn.IpCountry, txn.CardCountry) && RuleUtils.IsRedHour(txn.UtcTime, ctx.RedHoursUtc)) || (facts.DeviceVelocityLastHour > 50) || (acct.ChargebackCountLast90d >= 2) || ctx.International.HighRiskCountries.Contains(txn.CountryTo) || (txn.Type == \"International\" && ctx.International.HighRiskCountries.Contains(txn.CountryFrom) && txn.Currency != \"USD\"), facts.DeviceVelocityLastHour, facts.RealTimeRiskScore, acct.IsVip, RuleUtils.IsRedHour(txn.UtcTime, ctx.RedHoursUtc) ) == false"
+      },
       { "RuleName": "Approve_Default", "SuccessEvent": "APPROVE:Default", "RuleExpressionType": "LambdaExpression", "Expression": "true" }
     ]
   }

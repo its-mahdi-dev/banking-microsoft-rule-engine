@@ -70,6 +70,7 @@ public class BankingDecisionService_Naive : IBankingDecisionServiceNaive
         if (!string.Equals(txn.IpCountry, txn.CardCountry, StringComparison.OrdinalIgnoreCase) && isRedHour)
         {
             decision = Max(decision, Decision.Review); reasons.Add("GeoMismatchAtRedHour");
+            reasons.Add("GeoMismatchAtRedHour");
         }
         if (facts.DeviceVelocityLastHour > 50)
         {
@@ -92,6 +93,30 @@ public class BankingDecisionService_Naive : IBankingDecisionServiceNaive
 
         if (facts.RealTimeRiskScore >= 0.9) { decision = Decision.Block; reasons.Add("VeryHighRiskScore"); }
         else if (facts.RealTimeRiskScore >= 0.7) { decision = Max(decision, Decision.Review); reasons.Add("HighRiskScore"); }
+
+
+        bool geoMismatchAtRedHour = (!string.Equals(txn.IpCountry, txn.CardCountry, StringComparison.OrdinalIgnoreCase)) && isRedHour;
+        bool baselineRisk =
+               geoMismatchAtRedHour
+            || facts.DeviceVelocityLastHour > 50
+            || acct.ChargebackCountLast90d >= 2
+            || reasons.Contains("HighRiskDestination")
+            || reasons.Contains("HighRiskOriginNonUSD");
+
+        bool deviceTrusted = RuleUtils.EvaluateDeviceTrust(
+            baselineRisk: baselineRisk,
+            deviceVelocityLastHour: facts.DeviceVelocityLastHour,
+            riskScore: facts.RealTimeRiskScore,
+            isVip: acct.IsVip,
+            isRedHour: isRedHour
+        );
+
+        if (!deviceTrusted)
+        {
+            decision = Max(decision, Decision.Review);
+            reasons.Add("DeviceTrustFailed");
+        }
+
 
         decimal? fee = null;
         if (decision != Decision.Block && ctx.FeeByCurrency.TryGetValue(txn.Currency, out var fp))
