@@ -10,4 +10,22 @@ public static class RuleUtils
         holidays.Contains(DateOnly.FromDateTime(utc));
     public static bool GeoMismatch(string ipC, string cardC) =>
         !string.Equals(ipC, cardC, StringComparison.OrdinalIgnoreCase);
+
+    public static bool EvaluateDeviceTrust(
+        bool baselineRisk,
+        int deviceVelocityLastHour,
+        double riskScore,
+        bool isVip,
+        bool isRedHour)
+    {
+        if (isVip && !baselineRisk && riskScore < 0.8) return true;
+
+        var velocityCap = isRedHour ? 30 : 50;
+        if (deviceVelocityLastHour > velocityCap) return false;
+
+        if (baselineRisk && riskScore >= 0.7) return false;
+        if (!baselineRisk && riskScore <= 0.6) return true;
+
+        return riskScore < 0.8;
+    }
 }
